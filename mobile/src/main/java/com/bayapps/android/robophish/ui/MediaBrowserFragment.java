@@ -92,10 +92,15 @@ public class MediaBrowserFragment extends Fragment {
     private MediaFragmentListener mMediaFragmentListener;
     private View mErrorView;
     private TextView mErrorMessage;
+    private JSONObject mShowData;
+
+    private Context mContext;
+
     private final BroadcastReceiver mConnectivityChangeReceiver = new BroadcastReceiver() {
         private boolean oldOnline = false;
         @Override
         public void onReceive(Context context, Intent intent) {
+            mContext = context;
             // We don't care about network changes while this fragment is not associated
             // with a media ID (for example, while it is being initialized)
             if (mMediaId != null) {
@@ -176,7 +181,8 @@ public class MediaBrowserFragment extends Fragment {
         switch (id) {
             case 0:
                 // start DownloadManager
-                Downloader dl = new Downloader(getContext(), "http://phish.in/audio/000/030/671/30671.mp3");
+                String showId = extractShowFromMediaID(getMediaId());
+                Downloader dl = new Downloader(mContext, showId, mShowData);
                 return true;
         }
 
@@ -189,8 +195,6 @@ public class MediaBrowserFragment extends Fragment {
         menu.add("Download Show");
         super.onCreateOptionsMenu(menu,inflater);
     }
-
-    //private static AsyncHttpClient mSyncClient = new AsyncHttpClient();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -316,6 +320,7 @@ public class MediaBrowserFragment extends Fragment {
                         public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                             super.onSuccess(statusCode, headers, response);
                             try {
+                                mShowData = response;
                                 JSONObject data = response.getJSONObject("data");
                                 String tapernotes = data.getString("taper_notes");
                                 if (tapernotes.equals("null")) tapernotes = "Not available";

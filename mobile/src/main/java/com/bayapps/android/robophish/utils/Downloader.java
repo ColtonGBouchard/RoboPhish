@@ -9,6 +9,21 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
+import com.bayapps.android.robophish.model.ParseUtils;
+import com.bayapps.android.robophish.model.Show;
+import com.bayapps.android.robophish.model.Track;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+import cz.msebera.android.httpclient.Header;
+
 /**
  * Created by mikevoyt on 8/13/16.
  */
@@ -21,14 +36,26 @@ public class Downloader {
     private String downloadCompleteIntentName = DownloadManager.ACTION_DOWNLOAD_COMPLETE;
     private IntentFilter downloadCompleteIntentFilter = new IntentFilter(downloadCompleteIntentName);
 
-    public Downloader(Context context, String url) {
+    public Downloader(Context context, String showId, JSONObject showData) {
         context.registerReceiver(downloadCompleteReceiver, downloadCompleteIntentFilter);
 
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+
+        Show show = ParseUtils.parseShow(showData);
+        String title = show.getDateSimple() + ": " + show.getVenueName() + ", " + show.getLocation();
+        ArrayList<String> urls = new ArrayList<>();
+
+        for (Track track : show.getTracks()) {
+            String url = track.getUrl();
+            urls.add(url);
+
+        }
+
+
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urls.get(0)));
 
         // only download via WIFI
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
-        request.setTitle(url);
+        request.setTitle(title);
         request.setDescription("Downloading a song");
 
         request.setVisibleInDownloadsUi(true);
