@@ -33,6 +33,9 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
@@ -46,6 +49,7 @@ import android.widget.Toast;
 import com.bayapps.android.robophish.R;
 import com.bayapps.android.robophish.model.MusicProvider;
 import com.bayapps.android.robophish.model.MusicProviderSource;
+import com.bayapps.android.robophish.utils.Downloader;
 import com.bayapps.android.robophish.utils.LogHelper;
 import com.bayapps.android.robophish.utils.MediaIDHelper;
 import com.bayapps.android.robophish.utils.NetworkHelper;
@@ -166,6 +170,26 @@ public class MediaBrowserFragment extends Fragment {
         mMediaFragmentListener = (MediaFragmentListener) activity;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case 0:
+                // start DownloadManager
+                Downloader dl = new Downloader(getContext(), "http://phish.in/audio/000/030/671/30671.mp3");
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item); // important line
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        //inflater.inflate(R.menu.menu_sample, menu);
+        menu.add("Download Show");
+        super.onCreateOptionsMenu(menu,inflater);
+    }
+
     //private static AsyncHttpClient mSyncClient = new AsyncHttpClient();
 
     @Override
@@ -179,6 +203,9 @@ public class MediaBrowserFragment extends Fragment {
         ListView listView;
 
         if (mediaId != null && MediaIDHelper.isShow(mediaId)) {
+
+            setHasOptionsMenu(true);  //show option to download
+
             rootView = inflater.inflate(R.layout.fragment_list_show, container, false);
 
             ViewPager viewPager = (ViewPager) rootView.findViewById(R.id.viewpager);
