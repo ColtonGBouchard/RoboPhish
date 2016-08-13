@@ -53,10 +53,8 @@ public class Downloader {
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urls.get(0)));
 
-        // only download via WIFI
-        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
         request.setTitle(title);
-        request.setDescription("Downloading a song");
+        request.setDescription("Downloading " + title);
 
         request.setVisibleInDownloadsUi(true);
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);

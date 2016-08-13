@@ -94,13 +94,10 @@ public class MediaBrowserFragment extends Fragment {
     private TextView mErrorMessage;
     private JSONObject mShowData;
 
-    private Context mContext;
-
     private final BroadcastReceiver mConnectivityChangeReceiver = new BroadcastReceiver() {
         private boolean oldOnline = false;
         @Override
         public void onReceive(Context context, Intent intent) {
-            mContext = (Context) context;
             // We don't care about network changes while this fragment is not associated
             // with a media ID (for example, while it is being initialized)
             if (mMediaId != null) {
@@ -183,7 +180,6 @@ public class MediaBrowserFragment extends Fragment {
                 // start DownloadManager
                 String showId = extractShowFromMediaID(getMediaId());
                 Downloader dl = new Downloader(getActivity(), showId, mShowData);
-                //Downloader dl = new Downloader((Context) mContext, showId, mShowData);
                 return true;
         }
 
