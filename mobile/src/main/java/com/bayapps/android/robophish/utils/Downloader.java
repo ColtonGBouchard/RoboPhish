@@ -31,7 +31,8 @@ import cz.msebera.android.httpclient.Header;
 public class Downloader {
 
     private static final String TAG = LogHelper.makeLogTag(Downloader.class);
-    private static ArrayList<Long> mDownloadIds;
+    private static ArrayList<Long> mDownloadIds = new ArrayList<>();
+
 
     private String downloadCompleteIntentName = DownloadManager.ACTION_DOWNLOAD_COMPLETE;
     private IntentFilter downloadCompleteIntentFilter = new IntentFilter(downloadCompleteIntentName);
@@ -43,12 +44,12 @@ public class Downloader {
         Show show = ParseUtils.parseShow(showData);
         String title = show.getDateSimple() + ": " + show.getVenueName() + ", " + show.getLocation();
         ArrayList<String> urls = new ArrayList<>();
-        ArrayList<Long> mDownloadIds = new ArrayList<>();
 
         for (Track track : show.getTracks()) {
             String url = track.getUrl();
             urls.add(url);
 
+            /*
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
 
             request.setTitle(title);
@@ -57,13 +58,31 @@ public class Downloader {
 
             request.setVisibleInDownloadsUi(true);
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            request.setDestinationInExternalFilesDir(context, null, title + "," + track);
+            request.setDestinationInExternalFilesDir(context, null, url);
 
             // enqueue this request
             DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
             long id = downloadManager.enqueue(request);
             mDownloadIds.add(id);
+            */
         }
+
+        String url = urls.get(0);
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+
+        request.setTitle(title);
+        request.setDescription("Downloading " + title);
+        Log.d(TAG, "downloading " + url);
+
+        request.setVisibleInDownloadsUi(true);
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        request.setDestinationInExternalFilesDir(context, null, url);
+
+        // enqueue this request
+        DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+        long id = downloadManager.enqueue(request);
+        mDownloadIds.add(id);
+
     }
 
     private BroadcastReceiver downloadCompleteReceiver = new BroadcastReceiver() {
