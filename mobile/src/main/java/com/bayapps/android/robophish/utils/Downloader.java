@@ -31,7 +31,7 @@ import cz.msebera.android.httpclient.Header;
 public class Downloader {
 
     private static final String TAG = LogHelper.makeLogTag(Downloader.class);
-    private static long mDownloadId;
+    private static ArrayList<Long> mDownloadIds;
 
     private String downloadCompleteIntentName = DownloadManager.ACTION_DOWNLOAD_COMPLETE;
     private IntentFilter downloadCompleteIntentFilter = new IntentFilter(downloadCompleteIntentName);
@@ -43,26 +43,27 @@ public class Downloader {
         Show show = ParseUtils.parseShow(showData);
         String title = show.getDateSimple() + ": " + show.getVenueName() + ", " + show.getLocation();
         ArrayList<String> urls = new ArrayList<>();
+        ArrayList<Long> mDownloadIds = new ArrayList<>();
 
         for (Track track : show.getTracks()) {
             String url = track.getUrl();
             urls.add(url);
 
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+
+            request.setTitle(title);
+            request.setDescription("Downloading " + title);
+            Log.d(TAG, "downloading " + url);
+
+            request.setVisibleInDownloadsUi(true);
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setDestinationInExternalFilesDir(context, null, title + "," + track);
+
+            // enqueue this request
+            DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+            long id = downloadManager.enqueue(request);
+            mDownloadIds.add(id);
         }
-
-
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urls.get(0)));
-
-        request.setTitle(title);
-        request.setDescription("Downloading " + title);
-
-        request.setVisibleInDownloadsUi(true);
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        request.setDestinationInExternalFilesDir(context, null, "song.mp3");
-
-        // enqueue this request
-        DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-        mDownloadId = downloadManager.enqueue(request);
     }
 
     private BroadcastReceiver downloadCompleteReceiver = new BroadcastReceiver() {
@@ -70,7 +71,7 @@ public class Downloader {
         public void onReceive(Context context, Intent intent) {
 
             long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0L);
-            if (id != mDownloadId) {
+            if (!mDownloadIds.contains(id)) {
                 Log.v(TAG, "Ingnoring unrelated download " + id);
                 return;
             }
@@ -94,6 +95,7 @@ public class Downloader {
 
             int uriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI);
             String downloadedPackageUriString = cursor.getString(uriIndex);
+            Log.d(TAG, "downloaded " + downloadedPackageUriString);
         }
     };
 }
