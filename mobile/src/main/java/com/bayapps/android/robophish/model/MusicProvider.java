@@ -52,7 +52,7 @@ public class MusicProvider {
     private MusicProviderSource mSource;
 
     // Categorized caches for music track data
-    private List<String> mYears;
+    private List<YearData> mYears;
     private final Set<String> mFavoriteTracks;
     private final ConcurrentMap<String, MutableMediaMetadata> mMusicListById;
     private ConcurrentMap<String, List<MediaMetadataCompat>> mShowsInYearYear;
@@ -74,7 +74,7 @@ public class MusicProvider {
 
     public MusicProvider(MusicProviderSource source) {
         mSource = source;
-        mYears = new ArrayList<String>();
+        mYears = new ArrayList<YearData>();
         mShowsInYearYear = new ConcurrentHashMap<>();
         mTracksInShow = new ConcurrentHashMap<>();
         mMusicListById = new ConcurrentHashMap<>();
@@ -169,9 +169,15 @@ public class MusicProvider {
             new AsyncTask<Void, Void, State>() {
                 @Override
                 protected State doInBackground(Void... params) {
-                    if (mYears.isEmpty()) mYears = mSource.years();
-                    for (String year : mYears) {
-                        mediaItems.add(createBrowsableMediaItemForYear(year, resources));
+                    List<YearData> years = mSource.years();  //always refresh years so we get fresh show count
+                    if (!mYears.isEmpty() && (years.get(0).getShowCount() != mYears.get(0).getShowCount())) {
+                        mShowsInYearYear = new ConcurrentHashMap<>();  //clear cache if number of shows have changed
+                    }
+
+                    mYears = years;
+
+                    for (YearData year : mYears) {
+                        mediaItems.add(createBrowsableMediaItemForYear(year.getYear(), year.getShowCount(), resources));
                     }
                     return null;
                 }
@@ -255,11 +261,12 @@ public class MusicProvider {
         }
     }
 
-    private MediaBrowserCompat.MediaItem createBrowsableMediaItemForYear(String year,
+    private MediaBrowserCompat.MediaItem createBrowsableMediaItemForYear(String year, String showCount,
                                                                          Resources resources) {
         MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
                 .setMediaId(createMediaID(null, MEDIA_ID_SHOWS_BY_YEAR, year))
                 .setTitle(year)
+                .setSubtitle(showCount + " shows")
                 .build();
         return new MediaBrowserCompat.MediaItem(description,
                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE);
